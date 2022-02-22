@@ -12,7 +12,7 @@ def create_russian_vocabulary():
 
 alphabet = create_russian_vocabulary()
 alphabet_length = len(alphabet)
-cpu_speed = 2100_000_000 * 4
+cpu_speed = 4_200_000_000 * 8
 
 def visualization(password: string):
     password = sorted(password)
@@ -29,15 +29,16 @@ def generate_password(length: int):
     for _ in range(length):
         password = password + rnd.choice(alphabet)
 
-    visualization(password)
     return password
 
 def generate_password_time_decorator(length: int):
     start_time = time.time()
     password = generate_password(length)
     end_time = time.time()
-    time_lapsed = end_time - start_time
-    print(f'Elapsed time to generate password \'{password}\' is {time_convert(time_lapsed)}')
+    time_lapsed = (end_time - start_time)
+    print(time_lapsed)
+    print(f'Elapsed time to generate password \'{password}\' is {time_lapsed} seconds')
+    visualization(password)
     return password
 
 def calculate_bruteforce_time(password: string):
