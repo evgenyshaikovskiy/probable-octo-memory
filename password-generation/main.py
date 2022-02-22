@@ -27,7 +27,7 @@ def time_convert(sec: int):
 def generate_password(length: int):
     password = ''
     for _ in range(length):
-        password = password + rnd.choice(alphabet)
+        password.join(rnd.choice(alphabet))
 
     return password
 
