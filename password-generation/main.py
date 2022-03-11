@@ -39,8 +39,6 @@ def generate_multiple_passwords(length, count):
     return generate_password(length)
 
 
-
-
 def calculate_bruteforce_time(password):
     power = pow(len(alphabet), len(password))
     seconds = power / cpu_speed
