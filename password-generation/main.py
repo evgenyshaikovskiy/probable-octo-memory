@@ -1,11 +1,7 @@
 import random as rnd
-import time
 import datetime as dttm
 import matplotlib.pyplot as plt
-import string
 from collections import Counter
-
-# русские строчные и прописные буквы вариант 4
 
 def create_russian_vocabulary():
     return "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
@@ -14,39 +10,44 @@ alphabet = create_russian_vocabulary()
 alphabet_length = len(alphabet)
 cpu_speed = 4_200_000_000 * 8
 
-def visualization(password: string):
+def visualization(password):
     password = sorted(password)
     x = Counter(password).keys()
     y = Counter(password).values()
     plt.plot(x, y)
     plt.show()
-    
-def time_convert(sec: int):
-    return str(dttm.timedelta(sec))
   
-def generate_password(length: int):
+def generate_password(length):
     password = ''
     for _ in range(length):
-        password.join(rnd.choice(alphabet))
+        password += (rnd.choice(alphabet))
 
     return password
 
-def generate_password_time_decorator(length: int):
-    start_time = time.time()
-    password = generate_password(length)
-    end_time = time.time()
-    time_lapsed = (end_time - start_time)
-    print(time_lapsed)
-    print(f'Elapsed time to generate password \'{password}\' is {time_lapsed} seconds')
-    visualization(password)
-    return password
+def generate_multiple_passwords(length, count):
+    passwordConcat = ""
+    start_time = dttm.datetime.now()
+    for _ in range(count):
+        passwordConcat += generate_password(length)
 
-def calculate_bruteforce_time(password: string):
+    end_time = dttm.datetime.now()
+    
+    print(f'Time taken to generate {count} passwords: {end_time - start_time}')
+    visualization(passwordConcat)
+
+    # pass random password of given length
+    return generate_password(length)
+
+
+
+
+def calculate_bruteforce_time(password):
     power = pow(len(alphabet), len(password))
-    print(f'Average time to crack password of current length(in seconds): {time_convert(power / cpu_speed)}')
+    seconds = power / cpu_speed
+    print(f'Average time to crack password of current length: {seconds} seconds')
 
 def plot_password_length():
-    x = [i for i in range(1, 15)]
+    x = [i for i in range(1, 10)]
     y = []
 
     for i in x:
@@ -58,6 +59,10 @@ def plot_password_length():
 
 print('input password length:')
 length = int(input())
-password = generate_password_time_decorator(length)
+
+print('input count of passwords to generate:')
+count = int(input())
+
+password = generate_multiple_passwords(length, count)
 calculate_bruteforce_time(password)
 plot_password_length()
