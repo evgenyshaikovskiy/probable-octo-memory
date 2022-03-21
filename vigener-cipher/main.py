@@ -1,87 +1,117 @@
 import string
+import numpy as np
 
-available_characters = list(string.ascii_letters) + [" "]
-
-base_char_int_mapping = {}
-base_int_char_mapping = {}
-i = 0
-for character in available_characters:
-    base_char_int_mapping[character] = i
-    base_int_char_mapping[i] = character
-    i += 1
-
-max_char_value = i-1
-
-offset = 0
-encoder = {}
-decoder = {}
-for key_char in available_characters:
-    key_encoder_lookup = {}
-    key_decoder_lookup = {}
-    for plain_text_char in available_characters:
-        offset_char_int_value = base_char_int_mapping[plain_text_char] + offset
-        if offset_char_int_value > max_char_value:
-            offset_char_int_value = offset_char_int_value - max_char_value - 1
-        offset_character_mapping = base_int_char_mapping[offset_char_int_value]
-        key_encoder_lookup[plain_text_char] = offset_character_mapping
-        key_decoder_lookup[offset_character_mapping] = plain_text_char
-    encoder[key_char] = key_encoder_lookup
-    decoder[key_char] = key_decoder_lookup
-    offset += 1
+alphabet = list(string.ascii_uppercase)
+alphabet_len = len(alphabet)
 
 
-def encode_message(message, key, encoder):
-    message = message.replace("\n", " ")
-    encoded_message = []
-    key_index = 0
-    key_as_list = [key_character if key_character in encoder.keys() else "_"
-                   for key_character in list(key)]
-    for character in message:
-        if key_index > len(key_as_list) - 1:
-            key_index = 0
-        key_character = key_as_list[key_index]
-        if character not in encoder.keys():
-            encoded_message.append("_")
+def encode_message(plaintext, key):
+    ciphertext = ''
+    for i in range(len(plaintext)):
+        p = alphabet.index(plaintext[i])
+        k = alphabet.index(key[i % len(key)])
+        c = (p + k) % alphabet_len
+        ciphertext += alphabet[c]
+
+    return ciphertext
+
+
+def decode_message(ciphertext, key):
+    plaintext = ''
+    for i in range(len(ciphertext)):
+        p = alphabet.index(ciphertext[i])
+        k = alphabet.index(key[i % len(key)])
+        c = (p - k) % alphabet_len
+        plaintext += alphabet[c]
+
+    return plaintext
+
+
+def bruteforce_decoding(cipher, key):
+    out = ""
+    cipher = cipher.upper()
+    keymv = 0
+    for i in range(len(cipher)):
+        if cipher[i] in alphabet:
+            ciphercharid = alphabet.index(cipher[i])
+            keycharid = alphabet.index(key[(i - keymv) % len(key)])
+            out += alphabet[(ciphercharid - keycharid) % len(alphabet)]
         else:
-            encoded_message.append(encoder[key_character][character])
-        key_index += 1
+            keymv += 1
+            out += cipher[i]
 
-    return "".join(encoded_message)
+    return out
 
 
-def decode_message(message, key, decoder):
-    message = message.replace("\n", " ")
-    decoded_message = []
-    key_index = 0
-    key_as_list = [
-        key_character if key_character in decoder.keys() else "_"
-        for key_character in list(key)
-    ]
+def increment_ctable(ctable, itter=0):
+    if itter == len(ctable) - 1:
+        ctable.append(0)
+    elif ctable[itter] == len(alphabet) - 1:
+        ctable[itter] = 0
+        increment_ctable(ctable, itter=itter + 1)
+    else:
+        ctable[itter] += 1
 
-    for character in message:
-        if key_index > len(key_as_list) - 1:
-            key_index = 0
-        key_character = key_as_list[key_index]
-        if character not in decoder.keys():
-            decoded_message.append("_")
-        else:
-            decoded_message.append(decoder[key_character][character])
-        key_index += 1
+    return ctable
 
-    return "".join(decoded_message)
+
+def export_ctable(ctable):
+    out = ""
+    for i in ctable:
+        out += alphabet[i]
+
+    return out
+
+
+def calc_entropy(labels, base=None):
+    e = np.exp(1)
+    value, counts = np.unique(labels, return_counts=True)
+    norm_counts = counts / counts.sum()
+    base = e if base is None else base
+    return -(norm_counts * np.log(norm_counts) / np.log(base)).sum()
+
+
+def bruteforce(ciphertext, max_keylength=None, min_keylength=1):
+    ctable = [-1]
+    for i in range(min_keylength - 1):
+        ctable.append(0)
+
+    max_keylength = len(ciphertext) if max_keylength is None else max_keylength
+    cracked = False
+    cache = None
+    output = []
+    counter = 0
+
+    while not cracked:
+        i = increment_ctable(ctable)
+        if len(i) > max_keylength:
+            break
+        key = export_ctable(ctable)
+        out = bruteforce_decoding(ciphertext, key)
+        entropy = calc_entropy(list(out))
+        if cache is None or entropy < cache:
+            counter += 1
+            print(counter, key + ":", entropy, out)
+            # output.append([key, entropy, out])
+
+    return output
 
 
 print('input message to encode')
 message: string = str(input())
 
-print('input keyword to encode message')
+print('''input keyword to encode message
+      recommend keys with length less than 6:''')
 key: string = str(input())
 
-encoded_message = encode_message(message, key, encoder)
-
+encoded_message = encode_message(message, key)
 print(f'encoded message: {encoded_message} with keyword {key}')
 
-print('decoding message with prepared table...')
+print('decoding message with given key...')
 
-decoded_message = decode_message(encoded_message, key, decoder)
+decoded_message = decode_message(encoded_message, key)
 print(f'decoded message: {decoded_message}')
+
+print('decoding with bruteforce')
+
+result = bruteforce(encoded_message, len(key))
