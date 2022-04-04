@@ -1,3 +1,4 @@
+import json
 import string
 import numpy as np
 
@@ -44,7 +45,7 @@ def bruteforce_decoding(cipher, key):
 
 
 def increment_ctable(ctable, itter=0):
-    if itter == len(ctable) - 1:
+    if itter == len(ctable):
         ctable.append(0)
     elif ctable[itter] == len(alphabet) - 1:
         ctable[itter] = 0
@@ -72,7 +73,7 @@ def calc_entropy(labels, base=None):
 
 
 def bruteforce(ciphertext, max_keylength=None, min_keylength=1):
-    ctable = [-1]
+    ctable = []
     for i in range(min_keylength - 1):
         ctable.append(0)
 
@@ -92,7 +93,7 @@ def bruteforce(ciphertext, max_keylength=None, min_keylength=1):
         if cache is None or entropy < cache:
             counter += 1
             print(counter, key + ":", entropy, out)
-            # output.append([key, entropy, out])
+            output.append([key, entropy, out])
 
     return output
 
@@ -115,3 +116,6 @@ print(f'decoded message: {decoded_message}')
 print('decoding with bruteforce')
 
 result = bruteforce(encoded_message, len(key))
+with open('decryption.json', 'w', encoding='UTF-8') as json_file:
+    data = json.dumps(result, indent=4)
+    json_file.write(data)
