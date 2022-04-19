@@ -67,8 +67,8 @@ def decrypt(pk, ciphertext: str):
 
 
 def main():
-    p: int = 53
-    q: int = 97
+    p: int = 31
+    q: int = 17
 
     print('Generating your public/private keypairs...')
     public, private = generate_keypair(p, q)
